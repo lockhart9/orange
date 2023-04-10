@@ -1,6 +1,6 @@
 use std::io::{stdin, stdout, Write};
 
-use termion::cursor::{Goto, Left, Right};
+use termion::cursor::Goto;
 
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -23,24 +23,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Goto(width / 2 - (TITLE_TEXT.len() as u16) / 2, height / 2)
     )?;
 
-    stdout.write_all(format!("{}\n", TITLE_TEXT).as_bytes())?;
+    writeln!(
+        stdout,
+        "{}{}",
+        termion::color::Fg(termion::color::Red),
+        TITLE_TEXT
+    )?;
+
+    write!(stdout, "{}", Goto(width / 2, height / 2 + 2))?;
+
     stdout.flush()?;
 
+    let mut count = 0;
     for event in stdin.events() {
         let event = event?;
         match event {
             termion::event::Event::Key(key) => match key {
-                termion::event::Key::Left => {
-                    write!(stdout, "{}", Left(1))?;
-                    stdout.flush()?;
-                }
-                termion::event::Key::Right => {
-                    write!(stdout, "{}", Right(1))?;
-                    stdout.flush()?;
-                }
-                termion::event::Key::Char(c) if c == 'q' => break,
-                termion::event::Key::Char(c) => {
-                    write!(stdout, "{}", c)?;
+                termion::event::Key::Char(_) => {
+                    let next_char = match count {
+                        0 => 'Y',
+                        1 => 'E',
+                        2 => 'S',
+                        3 => '!',
+                        _ => break,
+                    };
+                    count += 1;
+                    write!(stdout, "{}", next_char)?;
                     stdout.flush()?;
                 }
                 termion::event::Key::Esc => break,
